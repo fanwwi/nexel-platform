@@ -14,6 +14,8 @@ db.serialize(() => {
       last_name TEXT NOT NULL,
       email TEXT UNIQUE NOT NULL,
       password TEXT NOT NULL,
+      country TEXT,
+      avatar TEXT,
       points INTEGER DEFAULT 0,
       role TEXT DEFAULT 'student'
     )

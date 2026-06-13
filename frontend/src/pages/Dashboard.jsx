@@ -8,11 +8,17 @@ export default function Dashboard() {
   const [uploading, setUploading] = useState(false);
 
   useEffect(() => {
+    if (!token) return;
+
     fetch("http://localhost:5000/api/submissions/my", {
       headers: { Authorization: `Bearer ${token}` },
     })
-      .then((r) => r.json())
-      .then(setSubmissions);
+      .then((r) => {
+        if (!r.ok) throw new Error("Ошибка загрузки решений");
+        return r.json();
+      })
+      .then(setSubmissions)
+      .catch((err) => console.error("Ошибка при получении решений:", err));
   }, [token]);
 
   const handleAvatarChange = async (e) => {
@@ -46,9 +52,18 @@ export default function Dashboard() {
         );
 
         const data = await res.json();
-        if (!res.ok) throw new Error();
 
+        if (!res.ok) {
+          throw new Error(
+            data.message || "Не удалось сохранить аватар на сервере",
+          );
+        }
+
+        // Принудительно обновляем контекст авторизации новыми данными
         login(token, { ...user, avatar: base64 });
+      } catch (error) {
+        console.error("КРИТИЧЕСКАЯ ОШИБКА ЗАГРУЗКИ АВАТАРА:", error);
+        alert(error.message || "Произошла ошибка при смене изображения");
       } finally {
         setUploading(false);
       }
@@ -69,7 +84,7 @@ export default function Dashboard() {
           />
 
           {user?.avatar ? (
-            <img src={user.avatar} className="avatar-img" />
+            <img src={user.avatar} alt="Avatar" className="avatar-img" />
           ) : (
             <div className="avatar-fallback">
               {user?.firstName?.[0]}

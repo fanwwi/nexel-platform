@@ -3,9 +3,9 @@ const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
 
 exports.register = async (req, res) => {
-  const { firstName, lastName, email, password } = req.body;
+  // 1. Добавляем country в принимаемые данные
+  const { firstName, lastName, email, password, country } = req.body;
   try {
-    // Проверяем существование пользователя
     const userExist = await db.query("SELECT * FROM users WHERE email = $1", [
       email,
     ]);
@@ -18,13 +18,12 @@ exports.register = async (req, res) => {
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Вставляем данные напрямую через наш адаптер
+    // 2. Добавляем в INSERT поле country ($5)
     const result = await db.query(
-      "INSERT INTO users (first_name, last_name, email, password) VALUES ($1, $2, $3, $4)",
-      [firstName, lastName, email, hashedPassword],
+      "INSERT INTO users (first_name, last_name, email, password, country) VALUES ($1, $2, $3, $4, $5)",
+      [firstName, lastName, email, hashedPassword, country || "Не указана"], // подстраховка, если фронтенд не прислал страну
     );
 
-    // Наш адаптер db.js для SQLite возвращает id через result.lastID
     const userId = result.lastID;
     const token = jwt.sign(
       { id: userId, role: "student" },
@@ -41,10 +40,11 @@ exports.register = async (req, res) => {
         email,
         points: 0,
         role: "student",
+        country: country || "Не указана",
+        avatar: null, // 3. Возвращаем фронтенду
       },
     });
   } catch (error) {
-    // Если что-то пойдет не так, ошибка ОБЯЗАТЕЛЬНО напечатается в терминале бэкенда
     console.error("CRITICAL REGISTER ERROR:", error);
     res
       .status(500)
@@ -82,6 +82,8 @@ exports.login = async (req, res) => {
         lastName: user.last_name,
         email: user.email,
         points: user.points,
+        country: user.country,
+        avatar: user.avatar,
         role: user.role,
       },
     });
@@ -93,8 +95,9 @@ exports.login = async (req, res) => {
 
 exports.getMe = async (req, res) => {
   try {
+    // Добавляем country в SELECT
     const result = await db.query(
-      'SELECT id, first_name AS "firstName", last_name AS "lastName", email, points, role FROM users WHERE id = $1',
+      'SELECT id, first_name AS "firstName", last_name AS "lastName", email, points, role, country, avatar FROM users WHERE id = $1',
       [req.user.id],
     );
     if (!result.rows || result.rows.length === 0)
