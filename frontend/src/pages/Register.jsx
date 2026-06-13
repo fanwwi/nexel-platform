@@ -1,6 +1,7 @@
 import React, { useState, useContext } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import { AuthContext } from "../context/AuthContext";
+import { FaEye, FaEyeSlash } from "react-icons/fa";
 
 export default function Register() {
   const [form, setForm] = useState({
@@ -8,22 +9,47 @@ export default function Register() {
     lastName: "",
     email: "",
     password: "",
+    confirmPassword: "",
+    country: "", // Добавили поле страны в стейт
   });
+
   const [error, setError] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirm, setShowConfirm] = useState(false);
+
   const { login } = useContext(AuthContext);
   const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError("");
+
+    if (!form.country) {
+      setError("Пожалуйста, выберите страну");
+      return;
+    }
+
+    if (form.password !== form.confirmPassword) {
+      setError("Пароли не совпадают");
+      return;
+    }
+
     try {
       const res = await fetch("http://localhost:5000/api/auth/register", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: JSON.stringify({
+          firstName: form.firstName,
+          lastName: form.lastName,
+          email: form.email,
+          password: form.password,
+          country: form.country, // Отправляем страну на бэкенд
+        }),
       });
+
       const data = await res.json();
-      if (!res.ok) throw new Error(data.message || "Registration failure.");
+      if (!res.ok) throw new Error(data.message || "Ошибка регистрации");
+
       login(data.token, data.user);
       navigate("/dashboard");
     } catch (err) {
@@ -31,84 +57,104 @@ export default function Register() {
     }
   };
 
+  // Массив стран для выбора
+  const countries = [
+    "Узбекистан",
+    "Казахстан",
+    "Кыргызстан",
+    "Таджикистан",
+    "Туркменистан",
+    "Россия",
+  ];
+
   return (
-    <div className="min-h-[85vh] flex items-center justify-center px-4 bg-[#0b0b0b]">
-      <div className="w-full max-w-md bg-[#121212] p-8 rounded-lg border border-[#222222]">
-        <h2 className="text-3xl font-extrabold text-white mb-6 text-center">
-          Create System Instance
-        </h2>
-        {error && (
-          <div className="mb-4 p-3 bg-red-900/40 border border-red-700 text-red-200 text-sm rounded">
-            {error}
-          </div>
-        )}
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                First Name
-              </label>
-              <input
-                type="text"
-                value={form.firstName}
-                onChange={(e) =>
-                  setForm({ ...form, firstName: e.target.value })
-                }
-                required
-                className="w-full bg-[#1c1c1c] border border-[#333333] rounded px-4 py-3 text-white focus:outline-none focus:border-[#ff6600]"
-              />
-            </div>
-            <div>
-              <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-                Last Name
-              </label>
-              <input
-                type="text"
-                value={form.lastName}
-                onChange={(e) => setForm({ ...form, lastName: e.target.value })}
-                required
-                className="w-full bg-[#1c1c1c] border border-[#333333] rounded px-4 py-3 text-white focus:outline-none focus:border-[#ff6600]"
-              />
-            </div>
-          </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Email
-            </label>
+    <div className="auth-wrapper">
+      <div className="auth-card">
+        <h2 className="auth-title">Создание аккаунта NEXEL</h2>
+        <p className="auth-subtitle">Подключение к системе</p>
+
+        {error && <div className="auth-error">{error}</div>}
+
+        <form onSubmit={handleSubmit} className="auth-form">
+          <div className="row">
             <input
-              type="email"
-              value={form.email}
-              onChange={(e) => setForm({ ...form, email: e.target.value })}
               required
-              className="w-full bg-[#1c1c1c] border border-[#333333] rounded px-4 py-3 text-white focus:outline-none focus:border-[#ff6600]"
-              placeholder="name@domain.com"
+              placeholder="Имя"
+              value={form.firstName}
+              onChange={(e) => setForm({ ...form, firstName: e.target.value })}
+            />
+
+            <input
+              required
+              placeholder="Фамилия"
+              value={form.lastName}
+              onChange={(e) => setForm({ ...form, lastName: e.target.value })}
             />
           </div>
-          <div>
-            <label className="block text-xs font-semibold text-gray-400 uppercase tracking-wider mb-2">
-              Password
-            </label>
+
+          <input
+            required
+            type="email"
+            placeholder="Email"
+            value={form.email}
+            onChange={(e) => setForm({ ...form, email: e.target.value })}
+          />
+
+          {/* ПОЛЕ ВЫБОРА СТРАНЫ */}
+          <select
+            required
+            value={form.country}
+            onChange={(e) => setForm({ ...form, country: e.target.value })}
+            className="auth-select"
+          >
+            <option value="" disabled>
+              Выберите страну
+            </option>
+            {countries.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+
+          {/* PASSWORD FIELD */}
+          <div className="input-with-icon">
             <input
-              type="password"
+              required
+              type={showPassword ? "text" : "password"}
+              placeholder="Пароль"
               value={form.password}
               onChange={(e) => setForm({ ...form, password: e.target.value })}
-              required
-              className="w-full bg-[#1c1c1c] border border-[#333333] rounded px-4 py-3 text-white focus:outline-none focus:border-[#ff6600]"
-              placeholder="••••••••"
             />
+            <span
+              className="icon"
+              onClick={() => setShowPassword(!showPassword)}
+            >
+              {showPassword ? <FaEyeSlash /> : <FaEye />}
+            </span>
           </div>
-          <button
-            type="submit"
-            className="w-full bg-[#ff6600] text-black font-bold py-3 rounded hover:bg-[#e65c00] transition mt-6"
-          >
-            Initialize Account
-          </button>
+
+          {/* CONFIRM PASSWORD FIELD */}
+          <div className="input-with-icon">
+            <input
+              required
+              type={showConfirm ? "text" : "password"}
+              placeholder="Подтвердите пароль"
+              value={form.confirmPassword}
+              onChange={(e) =>
+                setForm({ ...form, confirmPassword: e.target.value })
+              }
+            />
+            <span className="icon" onClick={() => setShowConfirm(!showConfirm)}>
+              {showConfirm ? <FaEyeSlash /> : <FaEye />}
+            </span>
+          </div>
+
+          <button type="submit">Создать аккаунт</button>
         </form>
-        <p className="text-sm text-gray-500 mt-6 text-center">
-          Already configured?{" "}
-          <Link to="/login" className="text-[#ff6600] hover:underline">
-            Execute access session
-          </Link>
+
+        <p className="auth-footer">
+          Уже есть аккаунт? <Link to="/login">Войти в систему</Link>
         </p>
       </div>
     </div>
