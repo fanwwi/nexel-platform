@@ -6,7 +6,7 @@ export default function Leaderboard() {
   const [board, setBoard] = useState([]);
 
   useEffect(() => {
-    fetch("http://localhost:5000/api/leaderboard", {
+    fetch("https://nexel-platform.onrender.com/api/leaderboard", {
       headers: { Authorization: `Bearer ${token}` },
     })
       .then((res) => res.json())

@@ -19,7 +19,7 @@ export default function Tasks() {
         setLoading(true);
         setError(null);
 
-        const res = await fetch("http://localhost:5000/api/tasks", {
+        const res = await fetch("https://nexel-platform.onrender.com/api/tasks", {
           headers: { Authorization: `Bearer ${token}` },
         });
 
@@ -43,7 +43,7 @@ export default function Tasks() {
     setResult(null);
 
     try {
-      const res = await fetch("http://localhost:5000/api/submissions", {
+      const res = await fetch("https://nexel-platform.onrender.com/api/submissions", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

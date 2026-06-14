@@ -20,7 +20,7 @@ export const AuthProvider = ({ children }) => {
 
   const fetchProfile = async () => {
     try {
-      const res = await fetch("http://localhost:5000/api/auth/me", {
+      const res = await fetch("https://nexel-platform.onrender.com/api/auth/me", {
         headers: { Authorization: `Bearer ${token}` },
       });
       if (res.ok) {
