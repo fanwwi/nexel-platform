@@ -7,6 +7,22 @@ export default function Dashboard() {
   const [submissions, setSubmissions] = useState([]);
   const [uploading, setUploading] = useState(false);
 
+  const [rank, setRank] = useState(null);
+
+  useEffect(() => {
+    if (!token || !user?.id) return;
+
+    fetch("http://localhost:5000/api/leaderboard", {
+      headers: { Authorization: `Bearer ${token}` },
+    })
+      .then((r) => r.json())
+      .then((data) => {
+        const idx = data.findIndex((u) => u.id === user.id);
+        setRank(idx !== -1 ? idx + 1 : null);
+      })
+      .catch(console.error);
+  }, [token, user?.id]);
+
   useEffect(() => {
     if (!token) return;
 
@@ -117,7 +133,7 @@ export default function Dashboard() {
 
         <div className="stat">
           <div className="label">Место</div>
-          <div className="value">#{user?.rank || "—"}</div>
+          <div className="value accent">#{rank || user?.rank || "—"}</div>
         </div>
 
         <div className="stat">
