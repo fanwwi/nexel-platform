@@ -7,7 +7,7 @@ export default function ProtectedRoute({ children }) {
 
   if (loading) {
     return (
-      <div class="flex h-screen items-center justify-center bg-[#0b0b0b] text-[#ff6600]">
+      <div className="flex h-screen items-center justify-center bg-[#0b0b0b] text-[#ff6600]">
         Processing structural loading...
       </div>
     );
